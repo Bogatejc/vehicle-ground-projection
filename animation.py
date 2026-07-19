@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 
+from constants import ANTENNA_HEIGHT
+
 VEHICLE_LENGTH_MM = 400.0
 VEHICLE_WIDTH_MM = 250.0
 TRAJECTORY_ARROW_LENGTH_MM = 260.0
@@ -63,7 +65,6 @@ def update_information_panel(
     pitch_value: float,
     antenna_height: float,
 ) -> None:
-    """Refresh the text content shown in the information panel."""
 
     heading_deg = np.degrees(heading_value)
     roll_deg = np.degrees(roll_value)
@@ -92,7 +93,6 @@ def create_animation(
     pitch: np.ndarray,
     filename: str = "vehicle_motion.gif",
 ) -> None:
-    """Create a polished, multi-panel animation of vehicle motion and attitude."""
 
     time = np.asarray(time, dtype=float)
     x = np.asarray(x, dtype=float)
@@ -297,7 +297,7 @@ def create_animation(
             heading[frame],
             roll[frame],
             pitch[frame],
-            antenna_height=1500.0,
+            antenna_height=ANTENNA_HEIGHT,
         )
 
         return (

@@ -2,19 +2,11 @@
 
 ## Overview
 
-This project solves the following tasks:
+This project estimates vehicle heading from GNSS measurements and projects the antenna position onto the moving plane, then visualizes the result as static plots and an animated GIF. The workflow is implemented in Python with separate modules for geometry, heading estimation, visualization, and animation.
 
-1. Calculate the projection of a GNSS antenna mounted **1500 mm above the vehicle moving plane** onto the moving plane.
-2. Estimate the vehicle heading from GNSS position measurements, assuming smooth forward motion.
-3. Visualize the computed results using static plots and an animated GIF.
+## Input data
 
-The solution is implemented in **Python 3** with a modular design that separates data loading, mathematical computations and visualization.
-
----
-
-## Input Data
-
-The input dataset consists of the following values:
+The input dataset should contain the following columns:
 
 | Field       | Description         | Unit |
 | ----------- | ------------------- | ---- |
@@ -24,101 +16,51 @@ The input dataset consists of the following values:
 | `roll_deg`  | Vehicle roll angle  | °    |
 | `pitch_deg` | Vehicle pitch angle | °    |
 
-The GNSS antenna is mounted **1500 mm above the moving plane**.
+The antenna height is fixed at 1500 mm, and the angle conventions are:
 
-The task defines the following angle conventions:
+- Positive roll means the right side of the vehicle is lower.
+- Positive pitch means the front of the vehicle is lower.
 
-- **Positive roll** → the **right side** of the vehicle is lower than the left side.
-- **Positive pitch** → the **front** of the vehicle is lower than the rear.
+## How to run
 
----
+Install the required dependencies:
 
-# Solution
-
-## 1. Data Loading
-
-The input data is loaded using **Pandas**.
-
-Before any calculations, roll and pitch are converted from degrees to radians because NumPy trigonometric functions expect radians.
-
-```text
-angle_rad = angle_deg × π / 180
+```bash
+pip install -r requirements.txt
 ```
 
----
+Run the workflow with the default input file:
 
-## 2. Vehicle Heading Estimation
-
-The dataset does not contain the vehicle heading directly.
-
-Since the task specifies that the vehicle moves smoothly forward, the heading can be estimated from consecutive GNSS positions.
-
-The position differences are calculated as
-
-```text
-Δx = x(i+1) - x(i)
-Δy = y(i+1) - y(i)
+```bash
+python main.py
 ```
 
-The heading angle is then computed using
+Optional arguments:
 
-```text
-heading = atan2(Δy, Δx)
+```bash
+python main.py path/to/input.csv
+python main.py --plots
+python main.py --gif
+python main.py --output my_results/solution.csv
+python main.py path/to/input.csv --plots --gif --output my_results/solution.csv
 ```
 
-Using `atan2()` correctly determines the angle in all four quadrants and avoids ambiguity that would occur with `atan()`.
+By default, the processed CSV is written to `output/solution.csv`, and the GIF is written to `vehicle_motion.gif` when `--gif` is used.
 
----
+## Solution summary
 
-## 3. Ground Projection
+The workflow follows a compact geometry-based pipeline:
 
-The GNSS antenna is located **1500 mm above the moving plane**.
+1. Data loading and preparation: the input CSV is read with pandas, and the attitude angles are converted from degrees to radians so they can be used directly in NumPy trigonometric calculations.
+2. Heading estimation: because the vehicle is assumed to move smoothly forward, the heading at each point is estimated from the direction of the previous and next GNSS positions. This is computed with `atan2`, which produces the correct angle in all quadrants.
+3. Ground projection: the antenna is mounted 1500 mm above the moving plane. Its projection onto that plane depends on both pitch and roll. The forward and lateral offsets are first computed in the vehicle frame and then rotated into the global XY frame using the estimated heading.
+4. Result generation: the computed heading and projected coordinates are appended to the data frame as `heading_deg`, `ground_x_mm`, and `ground_y_mm`.
+5. Visualization: the processed data can be exported as a CSV, displayed with static plots, or rendered as an animated GIF that shows the vehicle motion, heading, and attitude over time.
 
-If the vehicle had zero roll and pitch, the antenna projection would lie directly below the antenna.
+In short, the code transforms noisy GNSS motion into a physically meaningful estimate of the vehicle orientation and the trajectory of the antenna projection on the ground plane.
 
-When the vehicle is tilted, the antenna position is horizontally displaced.
+## Output
 
-The local offsets are computed as
-
-```text
-offset_forward = height × sin(pitch)
-
-offset_right = -height × sin(roll)
-```
-
-where
-
-- `height = 1500 mm`
-
-These offsets are expressed in the **vehicle coordinate system**.
-
-Because the vehicle is moving in an arbitrary direction, the local offset must be rotated into the global XY coordinate system using the estimated heading.
-
-The rotation is
-
-```text
-ΔX = offset_forward × cos(heading)
-     - offset_right × sin(heading)
-
-ΔY = offset_forward × sin(heading)
-     + offset_right × cos(heading)
-```
-
-Finally,
-
-```text
-ground_x = gnss_x + ΔX
-ground_y = gnss_y + ΔY
-```
-
-This produces the projected position of the antenna on the moving plane.
-
----
-
-# Output
-
-The vehicle heading estimation and ground projection calculations for each time unit are stored back to pandas dataframe and stored in `output/solution.csv`.
-
-Besides the calculated values here is also an animated figure that I believe shows the best what is going on.
+The generated solution file is written to the chosen output path, and the animation is saved as `vehicle_motion.gif` when requested.
 
 ![Vehicle Motion](vehicle_motion.gif)

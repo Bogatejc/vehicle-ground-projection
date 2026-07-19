@@ -47,14 +47,13 @@ def project_to_ground(
     Computes projection of GNSS antenna onto moving plane.
     """
 
-    local_offset = antenna_offset_vehicle(roll, pitch, height)
-    ground = np.zeros_like(local_offset)
+    offset = antenna_offset_vehicle(roll, pitch, height)
+    dx, dy = offset[:, 0], offset[:, 1]
 
-    for i in range(len(x)):
-        R = rotation_matrix_z(heading[i])
-        ground[i] = R @ local_offset[i]
+    cos_h = np.cos(heading)
+    sin_h = np.sin(heading)
 
-    ground_x = x - ground[:, 0]
-    ground_y = y - ground[:, 1]
+    ground_x = x - (dx * cos_h - dy * sin_h)
+    ground_y = y - (dx * sin_h + dy * cos_h)
 
     return ground_x, ground_y
