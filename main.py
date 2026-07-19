@@ -5,11 +5,8 @@ import pandas as pd
 
 from geometry import project_to_ground
 from heading import compute_heading
-from visualization import (
-    plot_projection_vectors,
-    plot_results,
-    plot_trajectory_with_heading,
-)
+
+from animation import create_animation
 
 ANTENNA_HEIGHT = 1500.0
 
@@ -35,11 +32,24 @@ def main():
 
     result.to_csv("./output/solution.csv", index=False)
 
-    plot_results(x, y, gx, gy, heading, df["time_s"].to_numpy(), roll, pitch)
+    # In order to see the basic plots uncomment the following lines and add the required imports at the top of this file.
+    # plot_results(x, y, gx, gy, heading, df["time_s"].to_numpy(), roll, pitch)
 
-    plot_trajectory_with_heading(x, y, gx, gy, heading)
+    # plot_trajectory_with_heading(x, y, gx, gy, heading)
 
-    plot_projection_vectors(x, y, gx, gy)
+    # plot_projection_vectors(x, y, gx, gy)
+
+    create_animation(
+        time=df["time_s"].to_numpy(),
+        x=x,
+        y=y,
+        ground_x=gx,
+        ground_y=gy,
+        heading=heading,
+        roll=roll,
+        pitch=pitch,
+        filename="vehicle_motion.gif",
+    )
 
 
 if __name__ == "__main__":

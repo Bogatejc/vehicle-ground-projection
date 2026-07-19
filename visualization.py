@@ -59,19 +59,6 @@ def plot_trajectory_with_heading(
         linestyle="--",
     )
 
-    # ax.quiver(
-    #     x[::step],
-    #     y[::step],
-    #     np.cos(heading)[::step],
-    #     np.sin(heading)[::step],
-    #     angles="xy",
-    #     scale_units="xy",
-    #     scale=0.02,
-    #     width=0.003,
-    #     color="tab:red",
-    #     label="Heading",
-    # )
-
     arrow_length = 200.0  # mm
 
     u = arrow_length * np.cos(heading)
